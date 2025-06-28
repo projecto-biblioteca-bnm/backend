@@ -11,6 +11,7 @@ import { LoanModule } from '../loan/loan.module';
 import { BookItemModule } from '../book-item/book-item.module';
 import { RequestModule } from '../request/request.module';
 import { EventModule } from '../event/event.module';
+import { HealthModule } from '../health/health.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { EventModule } from '../event/event.module';
     BookItemModule,
     RequestModule,
     EventModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],
