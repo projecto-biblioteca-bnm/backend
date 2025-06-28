@@ -1,0 +1,273 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Author {
+  id          Int           @id @default(autoincrement())
+  first_name  String        @db.VarChar(100)
+  last_name   String        @db.VarChar(100)
+  nationality String?       @db.VarChar(100)
+  Book_Author Book_Author[]
+}
+
+model Book {
+  id               Int           @id @default(autoincrement())
+  isbn             String        @unique(map: "isbn") @db.VarChar(17)
+  title            String        @db.VarChar(255)
+  subtitle         String?       @db.VarChar(255)
+  synopsis         String?       @db.Text
+  edition          String?       @db.VarChar(50)
+  language         String?       @db.VarChar(50)
+  page_count       Int?
+  publication_year Int?
+  publisher_id     Int
+  category_id      Int
+  Publisher        Publisher     @relation(fields: [publisher_id], references: [id], map: "Book_ibfk_1")
+  Category         Category      @relation(fields: [category_id], references: [id], map: "Book_ibfk_2")
+  BookItem         BookItem[]
+  Book_Author      Book_Author[]
+
+  @@index([category_id], map: "category_id")
+  @@index([publisher_id], map: "publisher_id")
+}
+
+model BookItem {
+  id               Int             @id @default(autoincrement())
+  book_id          Int
+  unique_code      String          @unique(map: "unique_code") @db.VarChar(100)
+  acquisition_date DateTime?       @db.Date
+  status           BookItem_status @default(Available)
+  location         String?         @db.VarChar(100)
+  Book             Book            @relation(fields: [book_id], references: [id], map: "BookItem_ibfk_1")
+  Loan             Loan[]
+  Reservation      Reservation[]
+
+  @@index([book_id], map: "book_id")
+}
+
+model Book_Author {
+  book_id   Int
+  author_id Int
+  Book      Book   @relation(fields: [book_id], references: [id], onDelete: Cascade, map: "Book_Author_ibfk_1")
+  Author    Author @relation(fields: [author_id], references: [id], onDelete: Cascade, map: "Book_Author_ibfk_2")
+
+  @@id([book_id, author_id])
+  @@index([author_id], map: "author_id")
+}
+
+model Category {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique(map: "name") @db.VarChar(200)
+  description String? @db.Text
+  Book        Book[]
+}
+
+model Librarian {
+  id   Int  @id
+  User User @relation(fields: [id], references: [id], onDelete: Cascade, map: "Librarian_ibfk_1")
+}
+
+model Loan {
+  id           Int         @id @default(autoincrement())
+  reader_id    Int
+  book_item_id Int
+  start_date   DateTime?   @default(now()) @db.DateTime(0)
+  due_date     DateTime    @db.Date
+  return_date  DateTime?   @db.Date
+  status       Loan_status @default(Loaned)
+  Reader       Reader      @relation(fields: [reader_id], references: [id], map: "Loan_ibfk_1")
+  BookItem     BookItem    @relation(fields: [book_item_id], references: [id], map: "Loan_ibfk_2")
+
+  @@index([reader_id], map: "reader_id")
+}
+
+model Notification {
+  id      Int       @id @default(autoincrement())
+  user_id Int
+  title   String    @db.VarChar(200)
+  message String    @db.Text
+  sent_at DateTime? @default(now()) @db.DateTime(0)
+  is_read Boolean?  @default(false)
+  User    User      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "Notification_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model Publisher {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique(map: "name") @db.VarChar(200)
+  address String? @db.VarChar(255)
+  phone   String? @db.VarChar(20)
+  email   String? @db.VarChar(255)
+  Book    Book[]
+}
+
+model Reader {
+  id                    Int           @id
+  identification_number String        @unique(map: "identification_number") @db.VarChar(50)
+  Loan                  Loan[]
+  User                  User          @relation(fields: [id], references: [id], onDelete: Cascade, map: "Reader_ibfk_1")
+  Reservation           Reservation[]
+  Request               Request[]
+}
+
+model Report {
+  id             Int            @id @default(autoincrement())
+  generated_by   Int
+  type           Report_type
+  generated_at   DateTime?      @default(now()) @db.DateTime(0)
+  content        String?        @db.Text
+  TechnicalStaff TechnicalStaff @relation(fields: [generated_by], references: [id], map: "Report_ibfk_1")
+
+  @@index([generated_by], map: "generated_by")
+}
+
+model Reservation {
+  id              Int                @id @default(autoincrement())
+  reader_id       Int
+  book_item_id    Int
+  reserved_at     DateTime?          @default(now()) @db.DateTime(0)
+  expiration_date DateTime?          @db.Date
+  status          Reservation_status @default(Pending)
+  Reader          Reader             @relation(fields: [reader_id], references: [id], map: "Reservation_ibfk_1")
+  BookItem        BookItem           @relation(fields: [book_item_id], references: [id], map: "Reservation_ibfk_2")
+
+  @@unique([reader_id, book_item_id, status], map: "reader_id")
+  @@index([book_item_id], map: "book_item_id")
+}
+
+model TechnicalStaff {
+  id     Int      @id
+  Report Report[]
+  User   User     @relation(fields: [id], references: [id], onDelete: Cascade, map: "TechnicalStaff_ibfk_1")
+}
+
+model User {
+  id             Int             @id @default(autoincrement())
+  username       String          @unique @db.VarChar(50)
+  first_name     String          @db.VarChar(50)
+  last_name      String          @db.VarChar(50)
+  email          String          @unique @db.VarChar(255)
+  password       String          @db.VarChar(255)
+  phone          String?         @db.VarChar(20)
+  birth_date     DateTime?       @db.Date
+  user_type      User_user_type
+  created_at     DateTime?       @default(now())
+  updated_at     DateTime?       @default(now())
+  deleted_at     DateTime?
+  
+  passwordResetToken   String?   @unique
+  passwordResetExpires DateTime?
+
+  Librarian      Librarian?
+  Notification   Notification[]
+  Reader         Reader?
+  TechnicalStaff TechnicalStaff?
+  Event          Event[]
+}
+
+model Request {
+  id          Int           @id @default(autoincrement())
+  reader_id   Int
+  type        Request_type
+  title       String        @db.VarChar(255)
+  description String        @db.Text
+  status      Request_status @default(Pending)
+  priority    String?       @db.VarChar(50)
+  notes       String?       @db.Text
+  response    String?       @db.Text
+  created_at  DateTime?     @default(now()) @db.DateTime(0)
+  updated_at  DateTime?     @default(now()) @db.DateTime(0)
+  Reader      Reader        @relation(fields: [reader_id], references: [id], onDelete: Cascade, map: "Request_ibfk_1")
+
+  @@index([reader_id], map: "reader_id")
+}
+
+model Event {
+  id          Int           @id @default(autoincrement())
+  title       String        @db.VarChar(255)
+  description String        @db.Text
+  date        DateTime      @db.Date
+  start_time  String?       @db.VarChar(10)
+  end_time    String?       @db.VarChar(10)
+  location    String        @db.VarChar(255)
+  capacity    Int?
+  status      Event_status  @default(Upcoming)
+  created_by  Int
+  created_at  DateTime?     @default(now()) @db.DateTime(0)
+  updated_at  DateTime?     @default(now()) @db.DateTime(0)
+  User        User          @relation(fields: [created_by], references: [id], onDelete: Cascade, map: "Event_ibfk_1")
+
+  @@index([created_by], map: "created_by")
+}
+
+enum Report_type {
+  MissingBooksQuery
+  OverdueLoans
+  UserHistory
+}
+
+enum BookItem_status {
+  Available
+  Loaned
+  Reserved
+  Maintenance
+  Lost
+}
+
+enum Reservation_status {
+  Pending
+  Active
+  Completed
+  Canceled
+  Expired
+}
+
+enum Loan_status {
+  Loaned
+  Overdue
+  Returned
+  Renewed
+}
+
+enum User_user_type {
+  Reader
+  Librarian
+  ChefeDeReparticao
+  ChefeDeDepartamento
+  TechnicalStaff
+}
+
+enum Request_type {
+  ReaderCard
+  BookPurchase
+  FacilityAccess
+  SpecialPermission
+  Other
+}
+
+enum Request_status {
+  Pending
+  Approved
+  Rejected
+  InProgress
+  Completed
+}
+
+enum Event_status {
+  Upcoming
+  Ongoing
+  Completed
+  Cancelled
+}

@@ -1,0 +1,33 @@
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { CategoryService } from './category.service';
+import { CreateCategoryDto } from '../dto/category/create-category.dto';
+
+@Controller('category')
+export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) {}
+
+  @Post()
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoryService.create(createCategoryDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.categoryService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.categoryService.findOne(Number(id));
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateCategoryDto: any) {
+    return this.categoryService.update(Number(id), updateCategoryDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.categoryService.remove(Number(id));
+  }
+}
