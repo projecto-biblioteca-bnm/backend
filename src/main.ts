@@ -61,9 +61,9 @@ async function bootstrap() {
   // Add a global prefix to all routes
   app.setGlobalPrefix('api');
 
-  // Fix missing Reader records on startup
-  const prismaService = app.get(PrismaService);
-  await fixMissingReaderRecords(prismaService);
+  // Temporarily disable database initialization for deployment
+  // const prismaService = app.get(PrismaService);
+  // await fixMissingReaderRecords(prismaService);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
