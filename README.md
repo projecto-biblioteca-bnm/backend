@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
@@ -83,3 +84,6 @@ User Update (PATCH /api/users/:id)
 #REBUILD PROJECT:
 #npx tsc --build --clean
 #npx tsc
+=======
+# backend
+>>>>>>> 191415e0824c2a2909c58db832557b76aa004f2e
