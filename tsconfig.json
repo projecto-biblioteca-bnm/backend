@@ -24,7 +24,10 @@
   },
   "exclude": [
     "node_modules",
-    "library-frontend"
+    "library-frontend",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "test/**/*"
   ],
   "include": [
     "src/**/*"
